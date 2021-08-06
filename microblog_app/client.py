@@ -1,6 +1,8 @@
 from .users import User
 
 import requests
+import json
+from typing import Iterable, Tuple
 
 
 class AppInstance:
@@ -30,28 +32,28 @@ class AppInstance:
         # TODO: issue post request to user directory service to get IP address of user
         return 'http://127.0.0.1'
 
-    def _issue_request(self, username, request) -> requests.Response:
+    def _issue_request(self, username: str, request: str) -> requests.Response:
         return requests.get(self._get_user_address(username), request)
 
-    def get_posts(self, username, n):
+    def get_posts(self, username: str, n: int) -> Iterable[str]:
         response = self._issue_request(username, f"GET /posts?n={n}")
-        return response.text
+        return json.loads(response.text)
 
-    def get_likes(self, username, n):
+    def get_likes(self, username: str, n: int) -> Iterable[str]:
         response = self._issue_request(username, f"GET /likes?n={n}")
-        return response.text
+        return json.loads(response.text)
 
-    def get_reposts(self, username, n):
+    def get_reposts(self, username: str, n: int) -> Iterable[str]:
         response = self._issue_request(username, f"GET /reposts?n={n}")
-        return response.text
+        return json.loads(response.text)
 
-    def post(self, message):
+    def post(self, message: str):
         pass
 
-    def like(self, post_id):
+    def like(self, post_id: str):
         pass
 
-    def repost(self, post_id):
+    def repost(self, post_id: str):
         pass
 
 
@@ -101,7 +103,7 @@ class MicroblogCommandLineInterface:
 
             print()
 
-    def _get_prompt(self, item):
+    def _get_prompt(self, item: str) -> Tuple[str, str]:
         username = input("Enter a username: ")
         n = input(f"How many {item} would you like to see? ")
 
