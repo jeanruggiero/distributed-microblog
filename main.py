@@ -1,3 +1,3 @@
-from microblog_app import AppInstance, MicroblogCommandLineInterface
+from microblog_app import AppInstance, MicroblogCommandLineInterface, User
 
-MicroblogCommandLineInterface(AppInstance()).run()
+MicroblogCommandLineInterface(AppInstance(User('jean'))).run()

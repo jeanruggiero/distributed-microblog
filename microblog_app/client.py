@@ -1,16 +1,49 @@
+from .users import User
+
+import requests
+
+
 class AppInstance:
 
-    def __init__(self):
-        pass
+    def __init__(self, user: User):
+        # TODO: start lightweight web server in new thread
+
+        self.user = user
+
+        # TODO: register IP address with user directory service
+        self._register(user.username)
+
+    @staticmethod
+    def _register(username):
+        """
+        Registers the IP address of the current user with the User Directory Service.
+
+        :param username: the username to register
+        """
+        ip = requests.get('http://icanhazip.com').text.strip()
+
+        # TODO: Select a UDS instance at random to register with
+        # requests.put(uds_url, {username: ip})
+
+    @staticmethod
+    def _get_user_address(username: str) -> User:
+        # TODO: issue post request to user directory service to get IP address of user
+        return 'http://127.0.0.1'
+
+    def _issue_request(self, username, request) -> requests.Response:
+        return requests.get(self._get_user_address(username), request)
 
     def get_posts(self, username, n):
-        return ["Post 1", "Post 2"]
+        response = self._issue_request(username, f"GET /posts?n={n}")
+        return response.text
 
     def get_likes(self, username, n):
-        return ['Post 3', 'Post 4']
+        response = self._issue_request(username, f"GET /likes?n={n}")
+        return response.text
 
     def get_reposts(self, username, n):
-        return ['Post 5', 'Post 5']
+        response = self._issue_request(username, f"GET /reposts?n={n}")
+        return response.text
 
     def post(self, message):
         pass
@@ -44,22 +77,27 @@ class MicroblogCommandLineInterface:
 
         while True:
             option = int(input('> '))
-            if option == 0:
-                print(self.menu)
-            elif option == 1:
-                self.get_posts()
-            elif option == 2:
-                self.get_likes()
-            elif option == 3:
-                self.get_reposts()
-            elif option == 4:
-                self.create_post()
-            elif option == 5:
-                self.like_post()
-            elif option == 6:
-                self.repost_post()
-            else:
-                print("Invalid option, please try again.")
+
+            try:
+                if option == 0:
+                    print(self.menu)
+                elif option == 1:
+                    self.get_posts()
+                elif option == 2:
+                    self.get_likes()
+                elif option == 3:
+                    self.get_reposts()
+                elif option == 4:
+                    self.create_post()
+                elif option == 5:
+                    self.like_post()
+                elif option == 6:
+                    self.repost_post()
+                else:
+                    print("Invalid option, please try again.")
+
+            except requests.ConnectionError as e:
+                print(f"Error: could not connect to user.")
 
             print()
 
