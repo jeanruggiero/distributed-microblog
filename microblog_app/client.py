@@ -46,7 +46,6 @@ class AppRequestServer:
         return {s.split('=')[0]: s.split('=')[1] for s in params.split('&')}
 
 
-
 class AppInstance:
 
     def __init__(self, user: User, port: int):
@@ -107,13 +106,13 @@ class AppInstance:
             return json.loads(response.text)
 
     def post(self, message: str):
-        pass
+        self.user.post(message)
 
     def like(self, post_id: str):
-        pass
+        self.user.like(post_id)
 
     def repost(self, post_id: str):
-        pass
+        self.user.repost(post_id)
 
 
 class MicroblogCommandLineInterface:
