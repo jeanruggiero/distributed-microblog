@@ -4,17 +4,19 @@ import requests
 import socket
 import json
 from typing import Iterable, Tuple
+from threading import Thread
 
 
-class AppRequestServer:
+class AppRequestServer(Thread):
 
     def __init__(self, port: int, user: User):
+        super().__init__()
         if not 0 < port < 65536:
             raise ValueError("Port number must be between 1 and 65535.")
 
         self.user = user
 
-    def serve(self):
+    def run(self):
         server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         server_socket.bind((socket.gethostname(), 80))
         server_socket.listen(5)
@@ -27,10 +29,18 @@ class AppRequestServer:
             entity = self._get_entity(request)
 
             if method.lower() == 'get':
-                if entity == 'posts':
-                    pass
-                # TODO: write code to handle requests from peers
 
+                if entity == 'posts':
+                    return self.user.get_posts(**self._get_query_params(request))
+                elif entity == 'reposts':
+                    return self.user.get_reposts(**self._get_query_params(request))
+                elif entity == 'likes':
+                    return self.user.get_likes(**self._get_query_params(request))
+                else:
+                    raise ValueError("Bad request.")
+
+            else:
+                raise ValueError("Bad request.")
 
     @staticmethod
     def _get_method(request: str) -> str:
@@ -59,10 +69,8 @@ class AppInstance:
         # TODO: register IP address with user directory service
         self._register(user.username)
 
-        # TODO set app server to run in a separate thread
-
-
-
+        # Start app server in a new thread
+        self.server.start()
 
     @staticmethod
     def _register(username):
@@ -74,6 +82,7 @@ class AppInstance:
         ip = requests.get('http://icanhazip.com').text.strip()
 
         # TODO: Select a UDS instance at random to register with
+        # TODO: read list of USD addresses from config file
         # requests.put(uds_url, {username: ip})
 
     @staticmethod
