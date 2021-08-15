@@ -1,16 +1,56 @@
 from .users import User
 
 import requests
+import socket
 import json
 from typing import Iterable, Tuple
 
 
+class AppRequestServer:
+
+    def __init__(self, port: int):
+        if not 0 < port < 65536:
+            raise ValueError("Port number must be between 1 and 65535.")
+
+    def serve(self):
+        server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        server_socket.bind((socket.gethostname(), 80))
+        server_socket.listen(5)
+
+        while True:
+            (peer_socket, peer_address) = server_socket.accept()
+            request = peer_socket.recv(1024).decode()
+
+            method = self._get_method(request)
+            entity = self._get_entity(request)
+
+            if method.lower() == 'get':
+                if entity == 'posts':
+
+
+
+    @staticmethod
+    def _get_method(request: str) -> str:
+        return request.split(' ')[0]
+
+    @staticmethod
+    def _get_entity(request: str) -> str:
+        return request.split(' ')[1][1:].split('?')[0]
+
+    @staticmethod
+    def _get_query_params(request: str) -> dict[str: str]:
+        params = request.split(' ')[1][1:].split('?')[1]
+        return {s.split('=')[0]: s.split('=')[1] for s in params.split('&')}
+
+
+
 class AppInstance:
 
-    def __init__(self, user: User):
+    def __init__(self, user: User, port: int):
         # TODO: start lightweight web server in new thread
 
         self.user = user
+        self.server =
 
         # TODO: register IP address with user directory service
         self._register(user.username)
