@@ -8,9 +8,11 @@ from typing import Iterable, Tuple
 
 class AppRequestServer:
 
-    def __init__(self, port: int):
+    def __init__(self, port: int, user: User):
         if not 0 < port < 65536:
             raise ValueError("Port number must be between 1 and 65535.")
+
+        self.user = user
 
     def serve(self):
         server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -26,7 +28,8 @@ class AppRequestServer:
 
             if method.lower() == 'get':
                 if entity == 'posts':
-
+                    pass
+                # TODO: write code to handle requests from peers
 
 
     @staticmethod
@@ -47,13 +50,20 @@ class AppRequestServer:
 class AppInstance:
 
     def __init__(self, user: User, port: int):
-        # TODO: start lightweight web server in new thread
 
+        # Load user data
         self.user = user
-        self.server =
+
+        # Start app server
+        self.server = AppRequestServer(8000, user)
 
         # TODO: register IP address with user directory service
         self._register(user.username)
+
+        # TODO set app server to run in a separate thread
+
+
+
 
     @staticmethod
     def _register(username):
@@ -76,16 +86,25 @@ class AppInstance:
         return requests.get(self._get_user_address(username), request)
 
     def get_posts(self, username: str, n: int) -> Iterable[str]:
-        response = self._issue_request(username, f"GET /posts?n={n}")
-        return json.loads(response.text)
+        if username == self.user.username:
+            return self.user.get_posts(n)
+        else:
+            response = self._issue_request(username, f"GET /posts?n={n}")
+            return json.loads(response.text)
 
     def get_likes(self, username: str, n: int) -> Iterable[str]:
-        response = self._issue_request(username, f"GET /likes?n={n}")
-        return json.loads(response.text)
+        if username == self.user.username:
+            return self.user.get_likes(n)
+        else:
+            response = self._issue_request(username, f"GET /likes?n={n}")
+            return json.loads(response.text)
 
     def get_reposts(self, username: str, n: int) -> Iterable[str]:
-        response = self._issue_request(username, f"GET /reposts?n={n}")
-        return json.loads(response.text)
+        if username == self.user.username:
+            return self.user.get_reposts(n)
+        else:
+            response = self._issue_request(username, f"GET /reposts?n={n}")
+            return json.loads(response.text)
 
     def post(self, message: str):
         pass
