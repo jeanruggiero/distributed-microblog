@@ -2,7 +2,6 @@ import json
 import os
 import requests
 import threading
-
 import flask
 
 from typing import Dict
@@ -29,7 +28,8 @@ def getAll() -> flask.Response:
 
 @store.route('/', methods=['GET', 'PUT'])
 def get() -> flask.Response:
-    key: str = json.loads(request.data).get('key', '')
+    req: Dict = json.loads(request.data)
+    key: str = req.get('key', '')
     if key == '':
         return jsonify({
             'success': False,
@@ -50,12 +50,20 @@ def get() -> flask.Response:
 
         # Start two-phase commit
         transaction: Dict = {'key': key, 'value': value}
-        requests.post(f'{coordinator}/tpc/start', json=transaction)
+        res:Dict = requests.post(f'http://{coordinator}/coordinator/start', json=transaction).json()
 
-        return jsonify({
-            'data': d['data'].get(key, {}),
-            'success': True,
-            'msg': f'Updated {KEY_STRING}:{key} with {VALUE_STRING}:{value}'})
+        if res.get('success', False):
+            return jsonify({
+                'data': d['data'].get(key, {}),
+                'success': True,
+                'msg': f'Updated {KEY_STRING}:{key} with {VALUE_STRING}:{value}'
+                })
+        else:
+            return jsonify({
+                'data': '',
+                'success': False,
+                'msg': f'Failed to update {KEY_STRING}:{key}'
+                })
     else:
         return jsonify({
             'success': False,

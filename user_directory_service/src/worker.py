@@ -1,9 +1,8 @@
 import json
 import threading
-from typing import Any, Dict
-
 import flask
 
+from typing import Any, Dict
 from flask import Blueprint, jsonify, request
 
 from . import d
@@ -19,7 +18,7 @@ def prepare() -> flask.Response:
     tid: Any = transaction.get('tid')
     key: Any = transaction.get('key')
     value: Any = transaction.get('value')
-    oldValue: Any = d.get('value', None)
+    oldValue: Any = d.get('value', '')
 
     # record history log
     history[tid] = {'old': oldValue, 'new': value}

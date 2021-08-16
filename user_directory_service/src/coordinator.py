@@ -5,18 +5,20 @@ import threading
 import flask
 
 from typing import Dict
+from requests.exceptions import ConnectTimeout
 from flask import Blueprint, jsonify, request
 
-from .common import validate_trans
+from .common import mb_post, validate_trans
 
 coordinator: Blueprint = Blueprint('coordinator', __name__)
 lock: threading.Lock = threading.Lock()
 
 tid: int = 0
-nodes = os.environ['NODES']
+nodes = os.environ['NODES'].split(',')
 
 @coordinator.route('/start', methods=['POST'])
 def start() -> flask.Response:
+    global tid, nodes
     with lock:
         transaction: Dict = json.loads(request.data)
         if not validate_trans(transaction):
@@ -31,25 +33,41 @@ def start() -> flask.Response:
 
         # Prepare Phase
         doCommit: bool = True
-        for w in nodes: # TODO: iterate through worker nodes
-            res = requests.post(f'{w}/tpc/prepare', json=transaction)
+        for w in nodes:
+            # res:Dict = requests.post(f'http://{w}/worker/prepare',
+            #         json=transaction).json()
+            try:
+                res:Dict = mb_post(f'http://{w}/worker/prepare', json=transaction)
+            except ConnectTimeout:
+                # worker node down or unresponsive
+                doCommit = False
+                break
+            
             # if any worker node is unable to prepare, rollback transaction
-            if not res.json().get('success', False):
+            if not res.get('success', False):
                 doCommit = False
                 break
 
         # Commit/Rollback Phase
         if doCommit:
             for w in nodes:
-                requests.post(f'{w}/tpc/commit', json=transaction)
+                # requests.post(f'http://{w}/worker/commit', json=transaction)
+                try:
+                    mb_post(f'http://{w}/worker/commit', json=transaction)
+                except ConnectTimeout:
+                    pass
 
             return jsonify({
                 'success': True,
                 'msg': f'Commited transaction {transaction["id"]}'})
         else:
             for w in nodes:
-                requests.post(f'{w}/tpc/rollback', json=transaction)
+                # requests.post(f'http://{w}/worker/rollback', json=transaction)
+                try:
+                    mb_post(f'http://{w}/worker/rollback', json=transaction)
+                except ConnectTimeout:
+                    pass
 
             return jsonify({
                 'success': False,
-                'msg': f'Rolled back transaction {transaction[""]}'})
+                'msg': f'Rolled back transaction {transaction["id"]}'})
