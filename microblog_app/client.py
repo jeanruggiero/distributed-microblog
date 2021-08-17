@@ -1,4 +1,5 @@
 from .users import User
+from .posts import Post
 
 import requests
 import socket
@@ -26,27 +27,24 @@ class AppRequestServer(Thread):
             (peer_socket, peer_address) = server_socket.accept()
             request = peer_socket.recv(1024).decode()
 
+            # print(request)
+
             response = self.handle_request(request)
-            print(f"Response: {response}")
-            peer_socket.send(self.package_response(response).encode())
+            peer_socket.send(self.package_response(response))
             peer_socket.close()
 
     @staticmethod
-    def package_response(response: str) -> str:
-        return f"HTTP / 1.1 200 OK\n{response}"
+    def package_response(response: str) -> bytes:
+        return f"HTTP/1.1 200 OK\n\n{response}".encode()
 
     def handle_request(self, request: str) -> str:
         method = self._get_method(request)
         entity = self._get_entity(request)
 
-        print(f"Method: {method}")
-        print(f"Entity: {entity}")
-
         if method.lower() == 'get':
 
             if entity == 'posts':
-                print("Getting posts")
-                return json.dumps(self.user.get_posts(**self._get_query_params(request)))
+                return json.dumps([post.serialize() for post in self.user.get_posts(**self._get_query_params(request))])
             elif entity == 'reposts':
                 return json.dumps(self.user.get_reposts(**self._get_query_params(request)))
             elif entity == 'likes':
@@ -77,15 +75,12 @@ class AppInstance:
         # Load user data
         self.user = user
 
-        # Start app server
+        # Start app server & register with UDS
         self.server = AppRequestServer(port, user)
-
-        # TODO: register IP address with user directory service
         self._register(user.username)
 
         # Start app server in a new thread
         self.server.start()
-
 
     def _register(self, username):
         """
@@ -102,31 +97,32 @@ class AppInstance:
 
     @staticmethod
     def _get_user_address(username: str) -> User:
-        # TODO: issue get request to user directory service to get IP address of user
-        return json.loads(requests.get("http://192.168.1.109:8084/store", json={'key': 'jean'}).text.strip())['value']
+        # Issue get request to user directory service to get IP address of user
+        return json.loads(requests.get("http://192.168.1.109:8084/store", json={'key': username}).text.strip())['value']
 
     def _issue_request(self, username: str, request: str) -> requests.Response:
+        # print(f"Sending request: http://{self._get_user_address(username)}/{request}")
         return requests.get(f"http://{self._get_user_address(username)}/{request}")
 
-    def get_posts(self, username: str, n: int) -> Iterable[str]:
+    def get_posts(self, username: str, n: int) -> Iterable[Post]:
         if username == self.user.username:
             return self.user.get_posts(n)
         else:
             response = self._issue_request(username, f"posts?n={n}")
-            return json.loads(response.text)
+            return [Post.deserialize(post) for post in json.loads(response.text)]
 
     def get_likes(self, username: str, n: int) -> Iterable[str]:
         if username == self.user.username:
             return self.user.get_likes(n)
         else:
-            response = self._issue_request(username, f"GET /likes?n={n}")
+            response = self._issue_request(username, f"likes?n={n}")
             return json.loads(response.text)
 
     def get_reposts(self, username: str, n: int) -> Iterable[str]:
         if username == self.user.username:
             return self.user.get_reposts(n)
         else:
-            response = self._issue_request(username, f"GET /reposts?n={n}")
+            response = self._issue_request(username, f"reposts?n={n}")
             return json.loads(response.text)
 
     def post(self, message: str):

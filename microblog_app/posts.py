@@ -1,4 +1,5 @@
 import uuid
+import json
 from typing import Tuple
 
 
@@ -8,7 +9,7 @@ class Post:
     username, post_id. This tuple can be obtained using the id property.
     """
 
-    def __init__(self, message: str, username: str):
+    def __init__(self, message: str, username: str, post_id: str = None):
         """
         Instantiates a new Post within the microblogging application.
 
@@ -21,7 +22,7 @@ class Post:
 
         self.message = message
         self.username = username
-        self.post_id = uuid.uuid1()
+        self.post_id = uuid.UUID(hex=post_id) if post_id else uuid.uuid1()
 
     @property
     def id(self) -> Tuple[str, uuid.UUID]:
@@ -29,3 +30,17 @@ class Post:
 
     def __str__(self):
         return f"Post(id={self.post_id.hex}, user={self.username}, '{self.message}')"
+
+    def serialize(self) -> dict:
+        return {'post_id': self.post_id.hex, 'username': self.username, 'message': self.message}
+
+    def dumps(self) -> str:
+        return json.dumps(self.serialize())
+
+    @classmethod
+    def deserialize(cls, post: dict):
+        return cls(**post)
+
+    @classmethod
+    def loads(cls, post: str):
+        return cls.deserialize(json.loads(post))
