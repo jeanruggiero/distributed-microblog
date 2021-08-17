@@ -1,0 +1,38 @@
+version: "3"
+services:
+  coordinator:
+    build: .
+    environment:
+      NODE_TYPE: COORDINATOR
+    volumes:
+      - "./:/code"
+    networks:
+      uds:
+        ipv4_address: 10.0.0.21
+  replica:
+    build: .
+    deploy:
+      replicas: 5
+    environment:
+      NODE_TYPE: WORKER
+      COORDINATOR: "10.0.0.21:8080"
+    depends_on:
+      - coordinator
+    volumes:
+      - "./:/code"
+    networks:
+      - uds
+  webproxy:
+    build: ./nginx
+    ports:
+      - 8080:80
+    networks:
+      - uds
+    depends_on:
+      - replica
+networks:
+  uds:
+    ipam:
+      driver: default
+      config:
+        - subnet: "10.0.0.0/16"

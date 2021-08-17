@@ -51,12 +51,18 @@ def rollback() -> flask.Response:
     tid: Any = transaction.get('tid')
     key: Any = transaction.get('key')
 
-    with lock:
-        changelog: Dict = history.get(tid, {})
-        currentValue: Any = d['data'][key]['value']
-        # Revert change iif a newer change has not been made
-        if currentValue == changelog['old']:
-            d['data'][key]['value'] = changelog['old']
+    changelog:Dict = history.pop(tid, None)
+
+    if changelog is not None:
+        oldValue: str = changelog['old']
+        newValue: str = changelog['new']
+
+        with lock:
+            # Check that no newer transaction(s) have been made or prepare
+            #   request was made in the first place
+            if d['data'][key].get('value', '') == newValue:
+                # rollback change
+                d['data'][key]['value'] = oldValue
 
     return jsonify({
         'success': True,

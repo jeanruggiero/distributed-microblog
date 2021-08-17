@@ -1,10 +1,8 @@
 import json
-import os
-import requests
 import threading
 import flask
 
-from typing import Dict
+from typing import Dict, Set
 from requests.exceptions import ConnectTimeout
 from flask import Blueprint, jsonify, request
 
@@ -14,7 +12,21 @@ coordinator: Blueprint = Blueprint('coordinator', __name__)
 lock: threading.Lock = threading.Lock()
 
 tid: int = 0
-nodes = os.environ['NODES'].split(',')
+n_replica = 0
+nodes: Set[str] = set()
+
+@coordinator.route('/join', methods=['POST'])
+def join() -> flask.Response:
+    global n_replica, nodes
+
+    replica_address:str = request.remote_addr
+    n_replica += 1
+    nodes.add(f'{replica_address}:8080')
+
+    return jsonify({
+        'success': True,
+         'msg': f''           
+        })
 
 @coordinator.route('/start', methods=['POST'])
 def start() -> flask.Response:

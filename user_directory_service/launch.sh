@@ -25,16 +25,15 @@ echo "\n"
 echo "#############################################"
 echo "### Starting UDS cluster...               ###"
 echo "#############################################"
-docker run -d -p 8081:8080 --ip=10.0.0.20 --network=mb_subnet -e N=5 \
-    -e NODE_TYPE="COORDINATOR" -e COORDINATOR="10.0.0.20:8080" \
-    -e NODES="10.0.0.21:8080,10.0.0.22:8080,10.0.0.23:8080,10.0.0.24:8080,10.0.0.25:8080" mb_flask_app
-docker run -d -p 8082:8080 --ip=10.0.0.21 --network=mb_subnet -e N=5 \
+docker run -d --ip=10.0.0.20 --network=mb_subnet \
+    -e NODE_TYPE="COORDINATOR" mb_flask_app
+docker run -d -p 8080:8080 --ip=10.0.0.21 --network=mb_subnet \
     -e NODE_TYPE="WORKER" -e COORDINATOR="10.0.0.20:8080" mb_flask_app
-docker run -d -p 8083:8080 --ip=10.0.0.22 --network=mb_subnet -e N=5 \
+docker run -d -p 8081:8080 --ip=10.0.0.22 --network=mb_subnet \
     -e NODE_TYPE="WORKER" -e COORDINATOR="10.0.0.20:8080" mb_flask_app
-docker run -d -p 8084:8080 --ip=10.0.0.23 --network=mb_subnet -e N=5 \
+docker run -d -p 8082:8080 --ip=10.0.0.23 --network=mb_subnet \
     -e NODE_TYPE="WORKER" -e COORDINATOR="10.0.0.20:8080" mb_flask_app
-docker run -d -p 8085:8080 --ip=10.0.0.24 --network=mb_subnet -e N=5 \
+docker run -d -p 8083:8080 --ip=10.0.0.24 --network=mb_subnet \
     -e NODE_TYPE="WORKER" -e COORDINATOR="10.0.0.20:8080" mb_flask_app
-docker run -d -p 8086:8080 --ip=10.0.0.25 --network=mb_subnet -e N=5 \
+docker run -d -p 8084:8080 --ip=10.0.0.25 --network=mb_subnet \
     -e NODE_TYPE="WORKER" -e COORDINATOR="10.0.0.20:8080" mb_flask_app

@@ -26,7 +26,7 @@ def getAll() -> flask.Response:
             'msg': f'Retrieved all {VALUE_STRING}\'s'
             })
 
-@store.route('/', methods=['GET', 'PUT'])
+@store.route('', methods=['GET', 'PUT'])
 def get() -> flask.Response:
     req: Dict = json.loads(request.data)
     key: str = req.get('key', '')
