@@ -63,9 +63,12 @@ class User:
         :param n: the number of posts to return
         :return: an iterable of the n most recent posts from this user
         """
+        print("Acquiring posts lock")
         self.posts_lock.acquire()
-        posts = sorted(self.posts, key= lambda p: p.id)[:n]
+        print("Posts lock acquired!")
+        posts = sorted(self.posts, key=lambda p: p.id)[:n]
         self.posts_lock.release()
+        print("returning posts")
         return posts
 
     def get_likes(self, n: int = 10) -> Iterable:

@@ -26,3 +26,6 @@ class Post:
     @property
     def id(self) -> Tuple[str, uuid.UUID]:
         return self.username, self.post_id
+
+    def __str__(self):
+        return f"Post(id={self.post_id.hex}, user={self.username}, '{self.message}')"

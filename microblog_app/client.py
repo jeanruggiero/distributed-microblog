@@ -14,33 +14,45 @@ class AppRequestServer(Thread):
         if not 0 < port < 65536:
             raise ValueError("Port number must be between 1 and 65535.")
 
+        self.port = port
         self.user = user
 
     def run(self):
         server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        server_socket.bind((socket.gethostname(), 80))
+        server_socket.bind((socket.gethostname(), self.port))
         server_socket.listen(5)
 
         while True:
             (peer_socket, peer_address) = server_socket.accept()
             request = peer_socket.recv(1024).decode()
 
-            method = self._get_method(request)
-            entity = self._get_entity(request)
+            response = self.handle_request(request)
+            print(f"Response: {response}")
+            peer_socket.send(self.package_response(response).encode())
+            peer_socket.close()
 
-            if method.lower() == 'get':
+    @staticmethod
+    def package_response(response: str) -> str:
+        return f"HTTP / 1.1 200 OK\n{response}"
 
-                if entity == 'posts':
-                    return self.user.get_posts(**self._get_query_params(request))
-                elif entity == 'reposts':
-                    return self.user.get_reposts(**self._get_query_params(request))
-                elif entity == 'likes':
-                    return self.user.get_likes(**self._get_query_params(request))
-                else:
-                    raise ValueError("Bad request.")
+    def handle_request(self, request: str) -> str:
+        method = self._get_method(request)
+        entity = self._get_entity(request)
 
-            else:
-                raise ValueError("Bad request.")
+        print(f"Method: {method}")
+        print(f"Entity: {entity}")
+
+        if method.lower() == 'get':
+
+            if entity == 'posts':
+                print("Getting posts")
+                return json.dumps(self.user.get_posts(**self._get_query_params(request)))
+            elif entity == 'reposts':
+                return json.dumps(self.user.get_reposts(**self._get_query_params(request)))
+            elif entity == 'likes':
+                return json.dumps(self.user.get_likes(**self._get_query_params(request)))
+
+        raise ValueError("Bad request.")
 
     @staticmethod
     def _get_method(request: str) -> str:
@@ -53,10 +65,12 @@ class AppRequestServer(Thread):
     @staticmethod
     def _get_query_params(request: str) -> dict[str: str]:
         params = request.split(' ')[1][1:].split('?')[1]
-        return {s.split('=')[0]: s.split('=')[1] for s in params.split('&')}
+        return {s.split('=')[0]: int(s.split('=')[1]) for s in params.split('&')}
 
 
 class AppInstance:
+
+    uds_instances = [f"http://192.168.1.109:{port}/store/" for port in range(8082, 8087)]
 
     def __init__(self, user: User, port: int):
 
@@ -64,7 +78,7 @@ class AppInstance:
         self.user = user
 
         # Start app server
-        self.server = AppRequestServer(8000, user)
+        self.server = AppRequestServer(port, user)
 
         # TODO: register IP address with user directory service
         self._register(user.username)
@@ -72,32 +86,33 @@ class AppInstance:
         # Start app server in a new thread
         self.server.start()
 
-    @staticmethod
-    def _register(username):
+
+    def _register(self, username):
         """
         Registers the IP address of the current user with the User Directory Service.
 
         :param username: the username to register
         """
-        ip = requests.get('http://icanhazip.com').text.strip()
+        # ip = requests.get('http://icanhazip.com').text.strip() + f":{self.server.port}"
+        ip = f"localhost:{self.server.port}"
 
         # TODO: Select a UDS instance at random to register with
         # TODO: read list of USD addresses from config file
-        # requests.put(uds_url, {username: ip})
+        requests.put(self.uds_instances[0], json.dumps({"key": username, "value": ip}))
 
     @staticmethod
     def _get_user_address(username: str) -> User:
-        # TODO: issue post request to user directory service to get IP address of user
-        return 'http://127.0.0.1'
+        # TODO: issue get request to user directory service to get IP address of user
+        return json.loads(requests.get("http://192.168.1.109:8084/store", json={'key': 'jean'}).text.strip())['value']
 
     def _issue_request(self, username: str, request: str) -> requests.Response:
-        return requests.get(self._get_user_address(username), request)
+        return requests.get(f"http://{self._get_user_address(username)}/{request}")
 
     def get_posts(self, username: str, n: int) -> Iterable[str]:
         if username == self.user.username:
             return self.user.get_posts(n)
         else:
-            response = self._issue_request(username, f"GET /posts?n={n}")
+            response = self._issue_request(username, f"posts?n={n}")
             return json.loads(response.text)
 
     def get_likes(self, username: str, n: int) -> Iterable[str]:
@@ -166,24 +181,28 @@ class MicroblogCommandLineInterface:
                     print("Invalid option, please try again.")
 
             except requests.ConnectionError as e:
+                print(e)
                 print(f"Error: could not connect to user.")
 
             print()
 
-    def _get_prompt(self, item: str) -> Tuple[str, str]:
+    def _get_prompt(self, item: str) -> Tuple[str, int]:
         username = input("Enter a username: ")
         n = input(f"How many {item} would you like to see? ")
 
-        return username, n
+        return username, int(n)
 
     def get_posts(self):
-        print(self.app_instance.get_posts(*self._get_prompt('posts')))
+        for post in self.app_instance.get_posts(*self._get_prompt('posts')):
+            print(post)
 
     def get_likes(self):
-        print(self.app_instance.get_likes(*self._get_prompt('likes')))
+        for like in self.app_instance.get_likes(*self._get_prompt('likes')):
+            print(like)
 
     def get_reposts(self):
-        print(self.app_instance.get_reposts(*self._get_prompt('reposts')))
+        for repost in self.app_instance.get_reposts(*self._get_prompt('reposts')):
+            print(repost)
 
     def create_post(self):
         message = input("Enter message: ")
