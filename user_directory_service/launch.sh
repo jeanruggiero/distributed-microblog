@@ -16,8 +16,10 @@ echo "\n"
 echo "#############################################"
 echo "### Building docker image and subnet...   ###"
 echo "#############################################"
+docker network rm mb_subnet
+docker network create --subnet=10.0.0.0/16 mb_subnet
 docker build -t mb_flask_app .
-docker network rm mb_subnet && docker network create --subnet=10.0.0.0/16 mb_subnet
+
 
 echo "\n"
 echo "#############################################"
