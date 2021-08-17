@@ -8,10 +8,34 @@ from typing import Iterable, Tuple
 from threading import Thread
 
 
+class BadRequestError(Exception):
+    """
+    This error indicates that the client has sent an illegal or malformed request and will result in an HTTP 400 Bad
+    Request error being returned to the requesting client.
+    """
+    pass
+
+
 class AppRequestServer(Thread):
+    """
+    This class represents a lightweight application server to handle incoming requests from peers in the distributed
+    microblogging application. It can handle GET requests of the following form:
+        GET /posts?n=<number_of_posts_to_get>
+        GET /likes?n=<number_of_likes_to_get>
+        GET /reposts?n=<number_of_reposts_to_get>
+
+    All other requests will result in a 400 Bad Request Error.
+    """
 
     def __init__(self, port: int, user: User):
+        """
+        Instantiates a new AppRequestServer.
+
+        :param port: the port on which to run the server
+        :param user: the username of the user whose data this server is responsible for managing
+        """
         super().__init__()
+
         if not 0 < port < 65536:
             raise ValueError("Port number must be between 1 and 65535.")
 
@@ -19,25 +43,49 @@ class AppRequestServer(Thread):
         self.user = user
 
     def run(self):
+        """
+        Runs this AppRequestServer.
+        """
         server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         server_socket.bind((socket.gethostname(), self.port))
         server_socket.listen(5)
 
         while True:
+
+            # Accept a peer connection
             (peer_socket, peer_address) = server_socket.accept()
             request = peer_socket.recv(1024).decode()
 
             # print(request)
 
-            response = self.handle_request(request)
-            peer_socket.send(self.package_response(response))
+            try:
+                # Handle the peer request and send a response to the peer
+                response = self.handle_request(request)
+                peer_socket.send(self.package_response(response))
+            except BadRequestError:
+                peer_socket.send(f"HTTP/1.1 400 Bad Request\n\n".encode())
+            except Exception:
+                peer_socket.send(f"HTTP/1.1 500 Internal Server Error\n\n".encode())
+
             peer_socket.close()
 
     @staticmethod
     def package_response(response: str) -> bytes:
+        """
+        Packages up a response as a properly formatted and utf-8 encoded HTTP response.
+        :param response: the response body
+        :return: a properly formatted and utf-8 encoded HTTP response
+        """
         return f"HTTP/1.1 200 OK\n\n{response}".encode()
 
     def handle_request(self, request: str) -> str:
+        """
+        Handles the peer request and returns a string containing the response body.
+        :param request: the peer request
+        :return: a string containing the response body
+        :raises BadRequestError: if the peer request is illegal or malformed
+        """
+
         method = self._get_method(request)
         entity = self._get_entity(request)
 
@@ -50,7 +98,7 @@ class AppRequestServer(Thread):
             elif entity == 'likes':
                 return json.dumps(self.user.get_likes(**self._get_query_params(request)))
 
-        raise ValueError("Bad request.")
+        raise BadRequestError("Bad request.")
 
     @staticmethod
     def _get_method(request: str) -> str:

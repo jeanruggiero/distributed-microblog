@@ -14,7 +14,7 @@ docker network prune
 
 From the `user_directory_service` run:
 ```shell script
-./launch.sh
+docker-compose up
 ```
 
 If there are issues with any of docker containers, images, or networks, you can
