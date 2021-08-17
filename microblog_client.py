@@ -1,3 +1,11 @@
+"""
+This program serves as the entry point for the peer-to-peer microblogging application client interface.
+
+Run with:
+
+python microblog_client.py <username> <port>
+"""
+
 from microblog_app import AppInstance, MicroblogCommandLineInterface, User
 
 import argparse

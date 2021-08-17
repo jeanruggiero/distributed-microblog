@@ -1,28 +1,30 @@
 # distributed-microblog
-CS6650 Final Project - Distributed Microblogging Application
+####CS6650 Final Project - Distributed Microblogging Application
+######Austin Chow, Jean Ruggiero, Phillip Vo
+
+
+## Running the client application
+
+Run the client application with:
+ 
+```microblog_client.py u p```
+
+positional arguments:
+```
+  u           The username to connect with.
+  p           The port on which to run the application.
+```
+
+optional arguments:
+```
+  -h, --help  show this help message and exit
+```
 
 
 
 ## Starting the User Directory Service (UDS)
 
-### Manually with docker commands
-
-Prepare your environment with:
-```shell script
-docker network prune
-```
-
-From the `user_directory_service` run:
-```shell script
-docker-compose up
-```
-
-If there are issues with any of docker containers, images, or networks, you can
-nuke all docker objects with the `clean.sh` script.
-
-**Note**: UDS will be accessible on _localhost_ at any port from _8080_ to _8084_
-
-### Automatically with docker-compose
+### Automatically with docker-compose (recommended)
 
 * Make sure docker containers, images, and networks are cleaned
 ```shell script
@@ -46,3 +48,22 @@ docker-compose up --build -d
 ```
 
 **Note**: UDS will be accessible at _localhost:8080_
+
+
+### Manually with docker commands
+
+Prepare your environment with:
+```shell script
+docker network prune
+```
+
+From the `user_directory_service` run:
+```shell script
+./launch.sh
+```
+
+If there are issues with any of docker containers, images, or networks, you can
+nuke all docker objects with the `clean.sh` script.
+
+**Note**: UDS will be accessible on _localhost_ at any port from _8080_ to _8084_
+
