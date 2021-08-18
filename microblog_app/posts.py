@@ -26,21 +26,34 @@ class Post:
 
     @property
     def id(self) -> Tuple[str, uuid.UUID]:
+        """Returns the unique identifier of this Post."""
         return self.username, self.post_id
 
     def __str__(self):
         return f"Post(id={self.post_id.hex}, user={self.username}, '{self.message}')"
 
     def serialize(self) -> dict:
+        """Serializes this Post into a dictionary."""
         return {'post_id': self.post_id.hex, 'username': self.username, 'message': self.message}
 
     def dumps(self) -> str:
+        """Serializes this Post into a string."""
         return json.dumps(self.serialize())
 
     @classmethod
     def deserialize(cls, post: dict):
+        """
+        Creates a new Post object based on the serialized post in the provided dictionary object.
+        :param post: a dict containing a serialized Post
+        :return: the new Post object
+        """
         return cls(**post)
 
     @classmethod
     def loads(cls, post: str):
+        """
+        Creates a new Post object based on the serialized post in the provided string.
+        :param post: a string containing a serialized Post
+        :return: the new Post object
+        """
         return cls.deserialize(json.loads(post))
