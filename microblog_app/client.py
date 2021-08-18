@@ -57,7 +57,7 @@ class AppRequestServer(Thread):
             (peer_socket, peer_address) = server_socket.accept()
             request = peer_socket.recv(1024).decode()
 
-            print(request)
+            # print(request)
 
             try:
                 # Handle the peer request and send a response to the peer
@@ -255,9 +255,10 @@ class MicroblogCommandLineInterface:
         print(self.menu)
 
         while True:
-            option = int(input('> '))
 
             try:
+                option = int(input('> '))
+
                 if option == 0:
                     print(self.menu)
                 elif option == 1:
@@ -276,8 +277,10 @@ class MicroblogCommandLineInterface:
                     print("Invalid option, please try again.")
 
             except requests.ConnectionError as e:
-                print(e)
                 print(f"Error: could not connect to user.")
+
+            except ValueError:
+                print("Please enter an integer!")
 
             print()
 
