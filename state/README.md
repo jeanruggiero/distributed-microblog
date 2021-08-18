@@ -1,0 +1,1 @@
+This folder contains the app data for any user who uses the app on this machine.

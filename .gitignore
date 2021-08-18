@@ -129,4 +129,6 @@ dmypy.json
 .pyre/
 
 # App specific
-state/
+state/*posts
+state/*likes
+
