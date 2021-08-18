@@ -291,8 +291,11 @@ class MicroblogCommandLineInterface:
         return username, int(n)
 
     def get_posts(self):
-        for post in self.app_instance.get_posts(*self._get_prompt('posts')):
-            print(post)
+        try:
+            for post in self.app_instance.get_posts(*self._get_prompt('posts')):
+                print(post)
+        except KeyError:
+            print("Error: User does not exist.")
 
     def get_likes(self):
         for like in self.app_instance.get_likes(*self._get_prompt('likes')):
