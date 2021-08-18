@@ -18,8 +18,9 @@ class BadRequestError(Exception):
 
 class AppRequestServer(Thread):
     """
-    This class represents a lightweight application server to handle incoming requests from peers in the distributed
-    microblogging application. It can handle GET requests of the following form:
+    This class represents a lightweight application TCP server to handle incoming requests from peers in the distributed
+    microblogging application. This server can be set to run ina new thread by calling its start() method. It can
+    handle GET requests of the following form:
         GET /posts?n=<number_of_posts_to_get>
         GET /likes?n=<number_of_likes_to_get>
         GET /reposts?n=<number_of_reposts_to_get>
@@ -47,7 +48,7 @@ class AppRequestServer(Thread):
         Runs this AppRequestServer.
         """
         server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        server_socket.bind((socket.gethostname(), self.port))
+        server_socket.bind(('', self.port))
         server_socket.listen(5)
 
         while True:
@@ -56,7 +57,7 @@ class AppRequestServer(Thread):
             (peer_socket, peer_address) = server_socket.accept()
             request = peer_socket.recv(1024).decode()
 
-            # print(request)
+            print(request)
 
             try:
                 # Handle the peer request and send a response to the peer
@@ -102,6 +103,11 @@ class AppRequestServer(Thread):
 
     @staticmethod
     def _get_method(request: str) -> str:
+        """
+        Extracts the request method from the provided peer request.
+        :param request: the peer request
+        :return: the extracted method
+        """
         return request.split(' ')[0]
 
     @staticmethod
@@ -115,10 +121,20 @@ class AppRequestServer(Thread):
 
 
 class AppInstance:
+    """
+    This class represents an application instance which acts as a peer in the peer-to-peer microblogging application.
+    It constitutes the "model" in the MVC design pattern.
+    """
 
+    # Address of the User Directory Service gateway
     uds_gateway_address = "http://localhost:8080/store"
 
     def __init__(self, user: User, port: int):
+        """
+        Instantiates a new AppInstance with the provided user and port number.
+        :param user: the user of this AppInstance
+        :param port: the port on which to run this
+        """
 
         # Load user data
         self.user = user
