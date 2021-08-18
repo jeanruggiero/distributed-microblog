@@ -2,12 +2,11 @@ from .posts import Post
 from typing import Iterable, Tuple
 from threading import Lock
 
-import json
-
 
 class User:
     """
-    Represents a user of the microblogging platform.
+    Represents a user of the microblogging platform. The user's data is stored on disk so that it is retrievable
+    after an application failure. Locking is used to prevent concurrent access to the individual data structures.
     """
 
     def __init__(self, username):
@@ -24,6 +23,7 @@ class User:
 
     @property
     def posts(self) -> Iterable[Post]:
+        """Returns an iterable containing all of this user's posts."""
         try:
             with open(f"state/{self.username}_posts", "r") as f:
                 return [Post.loads(post) for post in f]
@@ -32,6 +32,7 @@ class User:
 
     @property
     def reposts(self) -> Iterable[str]:
+        """Returns an iterable containing the post ids of all of this user's reposts."""
         try:
             with open(f"state/{self.username}_reposts", "r") as f:
                 return [post_id for post_id in f]
@@ -40,6 +41,7 @@ class User:
 
     @property
     def likes(self) -> Iterable[str]:
+        """Returns an iterable containing the post ids of all of this user's likes."""
         try:
             with open(f"state/{self.username}_likes", "r") as f:
                 return [post_id for post_id in f]
@@ -85,7 +87,6 @@ class User:
     def get_posts(self, n: int = 10) -> Iterable[Post]:
         """
         Returns an iterable of the n most recent posts from this user.
-
         :param n: the number of posts to return
         :return: an iterable of the n most recent posts from this user
         """
@@ -97,7 +98,6 @@ class User:
     def get_likes(self, n: int = 10) -> Iterable[str]:
         """
         Returns an iterable of the n most recent likes from this user.
-
         :param n: the number of likes to return
         :return: an iterable of the n most recent likes from this user
         """
@@ -109,7 +109,6 @@ class User:
     def get_reposts(self, n: int = 10) -> Iterable[str]:
         """
         Returns an iterable of the n most recent reposts from this user.
-
         :param n: the number of reposts to return
         :return: an iterable of the n most recent reposts from this user
         """
