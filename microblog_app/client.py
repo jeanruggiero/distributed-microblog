@@ -305,8 +305,11 @@ class MicroblogCommandLineInterface:
             print("Error: User does not exist.")
 
     def get_reposts(self):
-        for repost in self.app_instance.get_reposts(*self._get_prompt('reposts')):
-            print(repost)
+        try:
+            for repost in self.app_instance.get_reposts(*self._get_prompt('reposts')):
+                print(repost)
+        except KeyError:
+            print("Error: User does not exist.")
 
     def create_post(self):
         message = input("Enter message: ")
