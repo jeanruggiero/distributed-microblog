@@ -116,7 +116,7 @@ class AppRequestServer(Thread):
 
 class AppInstance:
 
-    uds_instances = [f"http://192.168.1.109:{port}/store/" for port in range(8082, 8087)]
+    uds_gateway_address = "http://localhost:8080/store"
 
     def __init__(self, user: User, port: int):
 
@@ -133,23 +133,22 @@ class AppInstance:
     def _register(self, username):
         """
         Registers the IP address of the current user with the User Directory Service.
-
         :param username: the username to register
         """
-        # ip = requests.get('http://icanhazip.com').text.strip() + f":{self.server.port}"
         ip = f"localhost:{self.server.port}"
+        requests.put(self.uds_gateway_address, json.dumps({"key": username, "value": ip}))
 
-        # TODO: Select a UDS instance at random to register with
-        # TODO: read list of USD addresses from config file
-        requests.put(self.uds_instances[0], json.dumps({"key": username, "value": ip}))
-
-    @staticmethod
-    def _get_user_address(username: str) -> User:
-        # Issue get request to user directory service to get IP address of user
-        return json.loads(requests.get("http://192.168.1.109:8084/store", json={'key': username}).text.strip())['value']
+    def _get_user_address(self, username: str) -> User:
+        """
+        Contacts the User Directory Service to obtain the IP address and port of the peer microblogging server
+        associated with the user with the provided username.
+        :param username: username of the user to get an address for
+        :return: the URL of the user's app server of the form host:port
+        """
+        return json.loads(requests.get(self.uds_gateway_address, json={'key': username}).text.strip())['value']
 
     def _issue_request(self, username: str, request: str) -> requests.Response:
-        # print(f"Sending request: http://{self._get_user_address(username)}/{request}")
+        print(f"Sending request: http://{self._get_user_address(username)}/{request}")
         return requests.get(f"http://{self._get_user_address(username)}/{request}")
 
     def get_posts(self, username: str, n: int) -> Iterable[Post]:
