@@ -164,10 +164,22 @@ class AppInstance:
         return json.loads(requests.get(self.uds_gateway_address, json={'key': username}).text.strip())['value']
 
     def _issue_request(self, username: str, request: str) -> requests.Response:
-        print(f"Sending request: http://{self._get_user_address(username)}/{request}")
+        """
+        Issues the provided GET request to the app server associated with the provided username. The UDS is queried to
+        obtain the IP address and port of the user's app server and the request is then submitted to that request.
+        :param username: the username of the user whose app server to send the request to
+        :param request: the request to issue
+        :return: the HTTP response from the app server
+        """
         return requests.get(f"http://{self._get_user_address(username)}/{request}")
 
     def get_posts(self, username: str, n: int) -> Iterable[Post]:
+        """
+        Returns an iterable of the n most recent posts by the user with the specified username.
+        :param username: the username of the user whose posts to get
+        :param n: the number of posts to get
+        :return: an iterable of the n most recent posts by the user with the specified username
+        """
         if username == self.user.username:
             return self.user.get_posts(n)
         else:
@@ -175,6 +187,12 @@ class AppInstance:
             return [Post.deserialize(post) for post in json.loads(response.text)]
 
     def get_likes(self, username: str, n: int) -> Iterable[str]:
+        """
+        Returns an iterable of the n most recent likes by the user with the specified username.
+        :param username: the username of the user whose likes to get
+        :param n: the number of likes to get
+        :return: an iterable of the n most recent likes by the user with the specified username
+        """
         if username == self.user.username:
             return self.user.get_likes(n)
         else:
@@ -182,6 +200,12 @@ class AppInstance:
             return json.loads(response.text)
 
     def get_reposts(self, username: str, n: int) -> Iterable[str]:
+        """
+        Returns an iterable of the n most recent reposts by the user with the specified username.
+        :param username: the username of the user whose reposts to get
+        :param n: the number of reposts to get
+        :return: an iterable of the n most recent reposts by the user with the specified username
+        """
         if username == self.user.username:
             return self.user.get_reposts(n)
         else:
@@ -189,12 +213,24 @@ class AppInstance:
             return json.loads(response.text)
 
     def post(self, message: str):
+        """
+        Adds a new post to the user currently logged into this microblogging AppInstance.
+        :param message: the message to include in the post
+        """
         self.user.post(message)
 
     def like(self, post_id: str):
+        """
+        Adds a new post to the list of posts liked by the user currently logged into this microblogging AppInstance.
+        :param post_id: the id of the post to like
+        """
         self.user.like(post_id)
 
     def repost(self, post_id: str):
+        """
+        Adds a new post to the list of posts reposted by the user currently logged into this microblogging AppInstance.
+        :param post_id: the id of the post to repost
+        """
         self.user.repost(post_id)
 
 
