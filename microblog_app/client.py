@@ -235,6 +235,12 @@ class AppInstance:
 
 
 class MicroblogCommandLineInterface:
+    """
+    This class encapsulates a command line interface (CLI) to the distributed microblogging application. This
+    interface is one possible view for the application, which was constructed following the MVC design pattern. The
+    user interacts with the application via the CLI through the use of menu items. Typing an integer from the menu
+    followed by <enter> will display prompts for the selected menu option.
+    """
 
     menu = """
         Menu:
@@ -248,9 +254,16 @@ class MicroblogCommandLineInterface:
     """
 
     def __init__(self, app_instance: AppInstance):
+        """
+        Instantiates a new MicroblogCommandLineInterface to the provided microblogging app instance.
+        :param app_instance: the app instance to interact with
+        """
         self.app_instance = app_instance
 
     def run(self):
+        """
+        Runs the user input loop of this MicroblogCommandLineInterface, allowing the user to interact with the app.
+        """
         print("Welcome to the distributed microblogging app!")
         print(self.menu)
 
@@ -284,13 +297,25 @@ class MicroblogCommandLineInterface:
 
             print()
 
-    def _get_prompt(self, item: str) -> Tuple[str, int]:
+    @staticmethod
+    def _get_prompt(item: str) -> Tuple[str, int]:
+        """
+        Given an item (posts, likes, or reposts), this method displays a series of prompts to get the username and
+        number of items desired from the user.
+        :param item: the entity to ask the user about: posts, likes, or reposts
+        :return: the username and number of posts provided by the user
+        """
         username = input("Enter a username: ")
         n = input(f"How many {item} would you like to see? ")
 
         return username, int(n)
 
     def get_posts(self):
+        """
+        This method handles the "Get a user's posts" menu item by requesting the required input from the user and
+        forwarding the request for posts to the AppInstance, which contains the business logic of the application.
+        The requested posts will be printed to the command line, if available.
+        """
         try:
             for post in self.app_instance.get_posts(*self._get_prompt('posts')):
                 print(post)
@@ -298,6 +323,11 @@ class MicroblogCommandLineInterface:
             print("Error: User does not exist.")
 
     def get_likes(self):
+        """
+        This method handles the "Get a user's likes" menu item by requesting the required input from the user and
+        forwarding the request for likes to the AppInstance, which contains the business logic of the application.
+        The requested likes will be printed to the command line, if available.
+        """
         try:
             for like in self.app_instance.get_likes(*self._get_prompt('likes')):
                 print(like)
@@ -305,6 +335,11 @@ class MicroblogCommandLineInterface:
             print("Error: User does not exist.")
 
     def get_reposts(self):
+        """
+        This method handles the "Get a user's reposts" menu item by requesting the required input from the user and
+        forwarding the request for reposts to the AppInstance, which contains the business logic of the application.
+        The requested reposts will be printed to the command line, if available.
+        """
         try:
             for repost in self.app_instance.get_reposts(*self._get_prompt('reposts')):
                 print(repost)
@@ -312,14 +347,29 @@ class MicroblogCommandLineInterface:
             print("Error: User does not exist.")
 
     def create_post(self):
+        """
+        This method handles the "Create a post" menu item by requesting the required input from the user and
+        forwarding the request to create a post to the AppInstance, which contains the business logic of the
+        application. A success message will be displayed if the post is created successfully.
+        """
         message = input("Enter message: ")
         self.app_instance.post(message)
         print("Message created!")
 
     def like_post(self):
+        """
+        This method handles the "Like a post" menu item by requesting the required input from the user and
+        forwarding the request to like a post to the AppInstance, which contains the business logic of the
+        application.
+        """
         id = input("Enter id of the post to like: ")
         self.app_instance.like(id)
 
     def repost_post(self):
+        """
+        This method handles the "Repost a post" menu item by requesting the required input from the user and
+        forwarding the request to repost a post to the AppInstance, which contains the business logic of the
+        application.
+        """
         id = input("Enter id of the post to repost: ")
         self.app_instance.repost(id)
