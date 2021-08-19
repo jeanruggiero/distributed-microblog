@@ -53,36 +53,27 @@ class User:
         Adds the provided post_id to the list of posts reposted by this user.
         :param post_id: the id of the post to repost
         """
-        self.reposts_lock.acquire()
-
-        with open(f"state/{self.username}_reposts", "a") as f:
-            f.write(post_id + "\n")
-
-        self.reposts_lock.release()
+        with self.reposts_lock:
+            with open(f"state/{self.username}_reposts", "a") as f:
+                f.write(post_id + "\n")
 
     def post(self, message: str):
         """
         Creates a new Post with the provided message.
         :param message: the message to post
         """
-        self.posts_lock.acquire()
-
-        with open(f"state/{self.username}_posts", "a") as f:
-            f.write(Post(message, self.username).dumps() + "\n")
-
-        self.posts_lock.release()
+        with self.posts_lock:
+            with open(f"state/{self.username}_posts", "a") as f:
+                f.write(Post(message, self.username).dumps() + "\n")
 
     def like(self, post_id: str):
         """
         Adds the provided post_id to the list of posts liked by this user.
         :param post_id: the id of the post to like
         """
-        self.likes_lock.acquire()
-
-        with open(f"state/{self.username}_likes", "a") as f:
-            f.write(post_id + "\n")
-
-        self.likes_lock.release()
+        with self.likes_lock:
+            with open(f"state/{self.username}_likes", "a") as f:
+                f.write(post_id + "\n")
 
     def get_posts(self, n: int = 10) -> Iterable[Post]:
         """
@@ -90,10 +81,8 @@ class User:
         :param n: the number of posts to return
         :return: an iterable of the n most recent posts from this user
         """
-        self.posts_lock.acquire()
-        posts = sorted(self.posts, key=lambda p: p.id)[:n]
-        self.posts_lock.release()
-        return posts
+        with self.posts_lock:
+            return sorted(self.posts, key=lambda p: p.id)[:n]
 
     def get_likes(self, n: int = 10) -> Iterable[str]:
         """
@@ -101,10 +90,8 @@ class User:
         :param n: the number of likes to return
         :return: an iterable of the n most recent likes from this user
         """
-        self.likes_lock.acquire()
-        likes = sorted(self.likes)[:n]
-        self.likes_lock.release()
-        return likes
+        with self.likes_lock:
+            return sorted(self.likes)[:n]
 
     def get_reposts(self, n: int = 10) -> Iterable[str]:
         """
@@ -112,8 +99,5 @@ class User:
         :param n: the number of reposts to return
         :return: an iterable of the n most recent reposts from this user
         """
-        self.reposts_lock.acquire()
-        reposts = sorted(self.reposts)[:n]
-        self.reposts_lock.release()
-        return reposts
-
+        with self.reposts_lock:
+            return sorted(self.reposts)[:n]
