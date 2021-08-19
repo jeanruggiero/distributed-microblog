@@ -1,5 +1,7 @@
 #!/bin/sh
 
+# This script is a backup means of starting the UDS. See the README for additional details.
+
 echo "#############################################"
 echo "### Killing all containers.               ###"
 echo "#############################################"

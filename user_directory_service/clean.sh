@@ -1,5 +1,7 @@
 #!/bin/sh
 
+# This script will remove all existing docker containers and images and prune all unused docker subnets.
+
 echo "#############################################"
 echo "### Killing all containers.               ###"
 echo "#############################################"

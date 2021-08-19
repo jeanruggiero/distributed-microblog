@@ -131,4 +131,4 @@ dmypy.json
 # App specific
 state/*posts
 state/*likes
-
+*.mov
