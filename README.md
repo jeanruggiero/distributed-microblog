@@ -1,6 +1,6 @@
 # distributed-microblog
-####CS6650 Final Project - Distributed Microblogging Application
-######Austin Chow, Jean Ruggiero, Phillip Vo
+#### CS6650 Final Project - Distributed Microblogging Application
+###### Austin Chow, Jean Ruggiero, Phillip Vo
 
 To run the distributed microblog application, first start the User Directory Service by following the instructions below. Once the UDS is up and
  running, any number of client application instances may be started in separate terminal windows to communicate with one another.
